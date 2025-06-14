@@ -14,7 +14,7 @@ def main():
     extractor = DataExtraction(patient_id, patient_dir)
 
     try:
-        fixation_df = extractor.extract_frame_predictions(fixation_id)
+        fixation_df = extractor.parse_frame_predictions(fixation_id)
         print("\n✅ Prediction data extracted!\n")
         print(fixation_df)
     except Exception as e:

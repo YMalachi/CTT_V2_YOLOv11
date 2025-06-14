@@ -23,7 +23,8 @@ class DataExtraction:
         self.patient_id = patient_id
         self.patient_dir = patient_dir
         self.predictions_dir = os.path.join(self.patient_dir, "predictions") # path to YOLOv11 prediction data directory (contain a .txt file for each fixation)
-        self.fixation_data = os.path.join(patient_dir, f"{patient_id}_fixations.csv") # path to Pupil Labs' exported fixation data.
+        self.fixation_data = os.path.join(self.patient_dir, f"{patient_id}_fixations.csv") # path to Pupil Labs' exported fixation data.
+        self.unity_data = os.path.join(self.patient_dir, f"{patient_id}_T2_EC")
 
     def _find_file(self, fixation_id): # INTERNAL FUNCTION!
         """
@@ -42,7 +43,7 @@ class DataExtraction:
                 f"No prediction file found for fixation ID '{fixation_id}' in {self.predictions_dir}")
         return pred_path
 
-    def extract_frame_predictions(self, fixation_id:str) -> pd.DataFrame:
+    def parse_frame_predictions(self, fixation_id:str) -> pd.DataFrame:
         """
         Extract prediction data from an individual fixation frames. NOTE: this function ONLY extracts data predicted
         by the model, and not Pupil Labs or Unity's data! use 'extract_fixation_data' function to extract PL's data.
@@ -80,7 +81,7 @@ class DataExtraction:
 
         return fixation_df
 
-    def extract_fixations_data(self):
+    def parse_fixations_data(self):
         """
         Extracts Pupil Labs fixation metadata from the patient's CSV file.
 
@@ -101,6 +102,18 @@ class DataExtraction:
         filtered_df = df[selected_columns]
         return filtered_df
 
+    def parse_unity_log(self):
+        with open(self.unity_data, "r") as f:
+            rows = []
+            for line in f:
+                event, time = line.strip().split('\t')
+                time = float(time)
+                if event in ("Start", "End"):
+                    rows.append({"type": event, "ball_label": None, "time": time})
+                else:
+                    kind, ball = event.split(" - ball ")
+                    rows.append({"type": kind, "ball_label": ball, "time": time})
+        return pd.DataFrame(rows)
 
 
 
