@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 51
+names: ['ball_01_pink', 'ball_02_pink', 'ball_02_yellow', 'ball_03_pink', 'ball_03_yellow', 'ball_04_pink', 'ball_04_yellow', 'ball_05_pink', 'ball_05_yellow', 'ball_06_pink', 'ball_06_yellow', 'ball_07_pink', 'ball_07_yellow', 'ball_08_pink', 'ball_08_yellow', 'ball_09_pink', 'ball_09_yellow', 'ball_10_pink', 'ball_10_yellow', 'ball_11_pink', 'ball_11_yellow', 'ball_12_pink', 'ball_12_yellow', 'ball_13_pink', 'ball_13_yellow', 'ball_14_pink', 'ball_14_yellow', 'ball_15_pink', 'ball_15_yellow', 'ball_16_pink', 'ball_16_yellow', 'ball_17_pink', 'ball_17_yellow', 'ball_18_pink', 'ball_18_yellow', 'ball_19_pink', 'ball_19_yellow', 'ball_20_pink', 'ball_20_yellow', 'ball_21_pink', 'ball_21_yellow', 'ball_22_pink', 'ball_22_yellow', 'ball_23_pink', 'ball_23_yellow', 'ball_24_pink', 'ball_24_yellow', 'ball_25_pink', 'ball_25_yellow', 'ball_unknown', 'user_cursor']
+
+roboflow:
+  workspace: yotams-workspace
+  project: ctt_v2_yolov8
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/yotams-workspace/ctt_v2_yolov8/dataset/3
