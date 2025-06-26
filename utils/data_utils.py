@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 # dictionary that contains the class number, and it's corresponding ball:
 class_ball_dict = {
@@ -14,7 +15,7 @@ class_ball_dict = {
 41: 'ball_21_yellow',42: 'ball_22_pink', 43: 'ball_22_yellow',44: 'ball_23_pink',  45: 'ball_23_yellow',
 46: 'ball_24_pink',  47: 'ball_24_yellow',48: 'ball_25_pink',  49: 'ball_25_yellow',50: 'ball_unknown', 51: 'user_cursor'}
 
-class DataExtraction:
+class PatientData:
     def __init__(self, patient_id, patient_dir):
         """
         :param patient_id: Patient ID (e.g. AN755)
@@ -22,9 +23,13 @@ class DataExtraction:
         """
         self.patient_id = patient_id
         self.patient_dir = patient_dir
+
+class DataExtraction(PatientData):
+    def __init__(self, patient_id, patient_dir):
+        super().__init__(patient_id, patient_dir)
         self.predictions_dir = os.path.join(self.patient_dir, "predictions") # path to YOLOv11 prediction data directory (contain a .txt file for each fixation)
         self.fixation_data = os.path.join(self.patient_dir, f"{patient_id}_fixations.csv") # path to Pupil Labs' exported fixation data.
-        self.unity_data = os.path.join(self.patient_dir, f"{patient_id}_T2_EC")
+        self.unity_data = os.path.join(self.patient_dir, f"{patient_id}_T2_EC.txt")
 
     def _find_file(self, fixation_id): # INTERNAL FUNCTION!
         """
@@ -74,7 +79,7 @@ class DataExtraction:
                     "ball" : class_ball_dict[class_id],
                     "ball_id": class_id,
                     "center" : (x_center, y_center), # a column for (x,y) ball's center coordinates.
-                    "size" : width * height # using the area of the bounding box to estimate ball's distance later
+                    "size" : width * height # using the area of the bounding box to estimate ball's distance
                 }
 
                 fixation_df = pd.concat([fixation_df, pd.DataFrame([new_row])], ignore_index=True)
@@ -94,10 +99,10 @@ class DataExtraction:
         - fixation duration
 
         :return: pd.DataFrame with columns:
-                 ["id", "start_times", "start_frame_index", "end_frame_index", "norm_pos_x", "norm_pos_y", "duration"]
+                 ["id", "start_timestamp", "start_frame_index", "end_frame_index", "norm_pos_x", "norm_pos_y", "duration"]
         """
         df = pd.read_csv(self.fixation_data)
-        selected_columns = ["id", "start_times", "start_frame_index", "end_frame_index", "norm_pos_x", "norm_pos_y",
+        selected_columns = ["id", "start_timestamp", "start_frame_index", "end_frame_index", "norm_pos_x", "norm_pos_y",
                             "duration"]
         filtered_df = df[selected_columns]
         return filtered_df
@@ -116,5 +121,73 @@ class DataExtraction:
         return pd.DataFrame(rows)
 
 
+
+class DataAnalysis:
+    def __init__(self, extractor: DataExtraction):
+        """
+        This class is meant to analyse the data of each patient. Should be constructed for each patient seperatly.
+        :param extractor: A DataExtraction class instance.
+        """
+        self.extractor = extractor
+
+        # Sync unitys time to pupil labs time
+        self.unity_df = self.sync_unity_times()
+
+    def sync_unity_times(self, fps=30):
+        """
+        Synchronizes Unity times to Pupil Labs clock using video frame timing and actual Unity Start event timing.
+        """
+        fixations_df = self.extractor.parse_fixations_data()
+        unity_df = self.extractor.parse_unity_log()
+
+        # Get the actual time of the "Start" event from Unity log
+        unity_start_time = unity_df[unity_df['type'] == 'Start']['time'].iloc[0]
+
+        # Estimate video start time based on first fixation frame and timestamp
+        first_fix_frame = fixations_df['start_frame_index'].iloc[0]
+        first_fix_time = fixations_df['start_timestamp'].iloc[0]
+        video_start_time = first_fix_time - (first_fix_frame / fps)
+
+        # Calculate the corresponding Pupil Labs time for the Unity "Start" event
+        pupil_unity_start_time = video_start_time + unity_start_time
+        unity_offset = pupil_unity_start_time - unity_start_time
+
+        # Apply offset to all Unity times
+        unity_df['time_synced'] = unity_df['time'] + unity_offset
+        return unity_df
+
+    def _calculate_balls_distance(self, prediction_df, fixation_id):
+        """
+        Adds 'distance' column to prediction_df based on gaze center in each fixation.
+        """
+        fixations_df = self.extractor.parse_fixations_data()
+        fix_id_num = int(fixation_id[3:])
+        fixation_focus_point = (
+            fixations_df['norm_pos_x'].iloc[fix_id_num],
+            fixations_df['norm_pos_y'].iloc[fix_id_num]
+        )
+
+        prediction_df['distance'] = prediction_df['center'].apply(
+            lambda center: np.sqrt(
+                (center[0] - fixation_focus_point[0]) ** 2 + (center[1] - fixation_focus_point[1]) ** 2)
+        )
+        return prediction_df
+
+    def _calculate_fixation_score_map(self, fixation_id) -> pd.DataFrame:
+        """
+        This function is meant to give each ball in the fixation a score based on how close the ball was to the fixation
+        focus (based on it's center), how long was the fixation, the ball size, and...
+        :param fixation_id: Serial ID of fixation (e.g. fix12).
+        :return: A score map that gives balls a score for how close they were to the fixation focus.
+        """
+        # extract predictions df:
+        prediction_df = self.extractor.parse_frame_predictions(fixation_id)
+        prediction_df = self._calculate_balls_distance(prediction_df, fixation_id)
+
+        # extract fixations df:
+        fixations_df = self.extractor.parse_fixations_data()
+
+        # extract unity df:
+        unity_df = self.unity_df
 
 

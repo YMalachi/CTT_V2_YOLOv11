@@ -1,0 +1,33 @@
+Start	 324.06 
+Correct - ball T2_1P	 324.06 
+Correct - ball T2_2Y	 325.82 
+Correct - ball T2_3P	 326.84 
+Correct - ball T2_4Y	 332.36 
+Correct - ball T2_5P	 338.92 
+Same - ball T2_5P	 340.4 
+Same - ball T2_5P	 341.58 
+Correct - ball T2_6Y	 342.66 
+Correct - ball T2_7P	 344.72 
+Correct - ball T2_8Y	 353.2 
+Same - ball T2_8Y	 354.56 
+Correct - ball T2_9P	 361.44 
+Correct - ball T2_10Y	 369.34 
+Correct - ball T2_11P	 388.64 
+Correct - ball T2_12Y	 399.46 
+Same - ball T2_12Y	 401.34 
+Correct - ball T2_13P	 403.12 
+Correct - ball T2_14Y	 411.9 
+Correct - ball T2_15P	 425.2 
+Correct - ball T2_16Y	 427.92 
+Same - ball T2_16Y	 429.76 
+Correct - ball T2_17P	 431.78 
+Correct - ball T2_18Y	 435.92 
+Correct - ball T2_19P	 439.36 
+Correct - ball T2_20Y	 442.66 
+Correct - ball T2_21P	 446.42 
+Correct - ball T2_22Y	 449.68 
+Correct - ball T2_23P	 453.3 
+Correct - ball T2_24Y	 460.26 
+Wrong - ball T2_11Y	 467.92 
+Correct - ball T2_25P	 471.64 
+End	 471.6467 
